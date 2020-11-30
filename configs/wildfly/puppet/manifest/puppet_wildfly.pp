@@ -1,5 +1,10 @@
-exec { 'java8-install':
-  command => '/usr/bin/apt-get install openjdk-8-jdk -y > java_install.log',
+exec { 'apt-get update':
+  command => '/usr/bin/apt-get update & > apt-get.log'
+}
+
+package { 'openjdk-8-jdk':
+  require => Exec['apt-get update'],
+  ensure => installed,
 }
 
 exec { 'wildfly-download':
