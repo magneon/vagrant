@@ -56,6 +56,12 @@ Vagrant.configure("2") do |config|
   config.vm.box = "ubuntu/bionic64"
 
   config.vm.define "mysql" do |mysql|
+    mysql.vm.provider "virtualbox" do |vb|
+      vb.name = "bionic_mysql_57"
+      vb.cpus = 4
+      vb.memory = 2048
+    end
+
     mysql.vm.network "forwarded_port", guest: 3306, host: 3307
     mysql.vm.network "public_network", ip: "192.168.0.230"
 
@@ -71,13 +77,30 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.define "wildfly" do |wildfly|
+    # The CentOS 7 default box has an issue with the shared folder
+    # wildfly.vm.box = "centos/7"
+    wildfly.vm.box = "generic/centos7"
+    wildfly.vm.provider "virtualbox" do |vb|
+      #vb.name = "bionic_wildfly_17"
+      vb.name = "centos_wildfly_17"
+      vb.cpus = 8
+      vb.memory = 4096
+    end
+
     wildfly.vm.network "forwarded_port", guest: 9990, host: 9990
     wildfly.vm.network "public_network", ip: "192.168.0.231"
 
+    # Specific configuration for CentOS 7, cuz isn't able to mount shared folder
     wildfly.vm.synced_folder ".", "/vagrant", disabled: true
     wildfly.vm.synced_folder "./configs", "/configs"
     wildfly.vm.synced_folder "./configs/wildfly", "/configs/wildfly"
     wildfly.vm.synced_folder "./configs/wildfly/puppet/manifest", "/configs/wildfly/puppet/manifest"
+
+    # Normal shared folder mount configuration
+    # wildfly.vm.synced_folder ".", "/vagrant", disabled: true
+    # wildfly.vm.synced_folder "./configs", "/configs"
+    # wildfly.vm.synced_folder "./configs/wildfly", "/configs/wildfly"
+    # wildfly.vm.synced_folder "./configs/wildfly/puppet/manifest", "/configs/wildfly/puppet/manifest"
 
     wildfly.vm.provision "shell", inline: "cat /configs/id_bionic_rafael.pub >> .ssh/authorized_keys"
 
@@ -89,6 +112,9 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.define "mysqlserver" do |mysqlserver|
+    mysqlserver.vm.provider "virtualbox" do |vb|
+      vb.name = "bionic_mysqlserver_57"
+    end
     mysqlserver.vm.network "public_network", ip: "192.168.0.233"
 
     mysqlserver.vm.synced_folder ".", "/vagrant", disabled: true
@@ -99,6 +125,10 @@ Vagrant.configure("2") do |config|
 
   # Ansible configuration for Windows
   config.vm.define "ansible-windows" do |aWindows|
+    aWindows.vm.provider "virtualbox" do |vb|
+      vb.name = "bionic_ansible_windows"
+    end
+
     # Defining the public network and the static ip
     aWindows.vm.network "public_network", ip: "192.168.0.232"
 
