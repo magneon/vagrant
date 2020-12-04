@@ -87,4 +87,41 @@ Vagrant.configure("2") do |config|
       puppet.manifest_file = "puppet_wildfly.pp"
     end
   end
+
+  config.vm.define "mysqlserver" do |mysqlserver|
+    mysqlserver.vm.network "public_network", ip: "192.168.0.233"
+
+    mysqlserver.vm.synced_folder ".", "/vagrant", disabled: true
+    mysqlserver.vm.synced_folder "./configs", "/configs"
+
+    mysqlserver.vm.provision "shell", inline: "cat /configs/id_bionic_rafael.pub >> .ssh/authorized_keys"
+  end
+
+  # Ansible configuration for Windows
+  config.vm.define "ansible-windows" do |aWindows|
+    # Defining the public network and the static ip
+    aWindows.vm.network "public_network", ip: "192.168.0.232"
+
+    # Installing the private key under the linux host machine
+    aWindows.vm.provision "shell", inline: "cp /vagrant/id_bionic_rafael /home/vagrant/.ssh/id_bionic_rafael"
+    aWindows.vm.provision "shell", inline: "chmod 600 /home/vagrant/.ssh/id_bionic_rafael"
+    aWindows.vm.provision "shell", inline: "chown vagrant:vagrant /home/vagrant/.ssh/id_bionic_rafael"
+
+    # Installing ansible in the linux host machine
+    aWindows.vm.provision "shell", inline: "apt-get update"
+    aWindows.vm.provision "shell", inline: "apt-get install -y software-properties-common"
+    aWindows.vm.provision "shell", inline: "apt-add-repository --yes --update ppa:ansible/ansible"
+    aWindows.vm.provision "shell", inline: "apt-get install -y ansible"
+
+    # This configuration using ansible provisioner, will work only if the Ansible being installed
+    # at the host machine (e. g. the machine with the Vagrantfile)
+    # aWindows.vm.provision "ansible" do |ansible|
+    #   ansible.compatibility_mode = "1.8"
+    #   ansible.playbook = "./configs/ansible/mysqlserver.yml"
+    # end
+
+    aWindows.vm.provision "shell", inline: "ansible-playbook -i /vagrant/configs/ansible/mysqlserver/hosts \
+                                                                /vagrant/configs/ansible/mysqlserver/mysqlserver.yml"
+  end
+
 end
