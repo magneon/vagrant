@@ -154,4 +154,17 @@ Vagrant.configure("2") do |config|
                                                                 /vagrant/configs/ansible/mysqlserver/mysqlserver.yml"
   end
 
+  # Example to provide a Docker at Windows using Vagrant
+  config.vm.define "host-docker" do |hDocker|
+    hDocker.vm.provider "virtualbox" do |vb|
+      vb.cpus = 4
+      vb.memory = 2048
+      vb.name = "bionic_ubuntu_docker_host"
+    end
+
+    hDocker.vm.network "public_network", ip: "192.168.0.234"
+    hDocker.vm.provision "shell", inline: "apt-get update"
+    hDocker.vm.provision "shell", inline: "apt-get install -y docker.io"
+  end
+
 end
